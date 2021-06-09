@@ -1,0 +1,479 @@
+basePath: /
+definitions:
+  handler.errorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  handler.idResponse:
+    properties:
+      id:
+        type: integer
+    type: object
+  handler.signInInput:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  handler.statusResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  storage.AudioList:
+    properties:
+      id:
+        type: integer
+      is_owner:
+        type: boolean
+      name:
+        type: string
+      owner_id:
+        type: integer
+      owner_name:
+        type: string
+      shared_to:
+        items:
+          $ref: '#/definitions/storage.ShareList'
+        type: array
+    type: object
+  storage.AudioListJson:
+    properties:
+      records:
+        items:
+          $ref: '#/definitions/storage.AudioList'
+        type: array
+      total_count:
+        type: integer
+    type: object
+  storage.ShareInput:
+    properties:
+      share_to:
+        type: integer
+    required:
+    - share_to
+    type: object
+  storage.ShareList:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  storage.ShareListCount:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      shared_records:
+        type: integer
+    type: object
+  storage.ShareListJson:
+    properties:
+      total_count:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/storage.ShareListCount'
+        type: array
+    type: object
+  storage.UpdateAudio:
+    properties:
+      duration:
+        type: integer
+      title:
+        type: string
+    type: object
+  storage.User:
+    properties:
+      name:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - name
+    - password
+    - username
+    type: object
+host: 10.191.0.210:8000
+info:
+  contact: {}
+  description: API Server to share aac files
+  title: AAC Share API
+  version: "1.0"
+paths:
+  /api/audio/:
+    get:
+      consumes:
+      - application/json
+      description: get audio list
+      operationId: get-all-audio
+      parameters:
+      - description: offset
+        in: query
+        minimum: 0
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: query
+        minimum: 1
+        name: limit
+        required: true
+        type: integer
+      - description: order type
+        enum:
+        - owner
+        - alphabet
+        in: query
+        name: order_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.AudioListJson'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get audio list
+      tags:
+      - audio
+    post:
+      consumes:
+      - multipart/form-data
+      description: upload aac file
+      operationId: upload-file
+      parameters:
+      - description: Body with aac file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.idResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Upload AAC file
+      tags:
+      - audio
+  /api/audio/{id}:
+    get:
+      consumes:
+      - application/json
+      description: download aac file
+      operationId: download-file
+      parameters:
+      - description: audio id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Success Download
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Download AAC file
+      tags:
+      - audio
+    put:
+      consumes:
+      - application/json
+      description: add description
+      operationId: add-description
+      parameters:
+      - description: aac description
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/storage.UpdateAudio'
+      - description: audio id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.statusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add description to AAC file
+      tags:
+      - audio
+  /api/share/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: unshare aac file
+      operationId: unshare-file
+      parameters:
+      - description: unshare from
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/storage.ShareInput'
+      - description: audio id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.statusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Unshare AAC file
+      tags:
+      - share
+    post:
+      consumes:
+      - application/json
+      description: share aac file
+      operationId: share-file
+      parameters:
+      - description: share to
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/storage.ShareInput'
+      - description: audio id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.statusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Share AAC file
+      tags:
+      - share
+  /api/shares:
+    get:
+      consumes:
+      - application/json
+      description: get share list
+      operationId: get-share-list
+      parameters:
+      - description: offset
+        in: query
+        minimum: 0
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: query
+        minimum: 1
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.ShareListJson'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get share list
+      tags:
+      - share
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: login
+      operationId: login
+      parameters:
+      - description: credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.signInInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: SignIn
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: create account
+      operationId: create-account
+      parameters:
+      - description: account info
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/storage.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: SignUp
+      tags:
+      - auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
