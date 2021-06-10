@@ -32,7 +32,7 @@ func main() {
 	}
 
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Can't load .env: %s", err.Error())
+		log.Printf("Can't load .env: %s", err.Error())
 	}
 
 	cfg := repository.Config{

@@ -2,7 +2,7 @@ build:
 	docker-compose build audio-storage
 
 run:
-	docker-compose up audio-storage
+	docker-compose up -d audio-storage
 
 test:
 	go test -v ./...

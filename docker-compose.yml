@@ -12,6 +12,7 @@ services:
       - db
     environment:
       - DB_PASSWORD=qwerty
+      - SECRET_KEY=very_secret_and_long_min_32_length_key
 
   db:
     restart: always
