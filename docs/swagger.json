@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "10.191.0.210:8000",
+    "host": "localhost:8000",
     "basePath": "/",
     "paths": {
         "/api/audio/": {

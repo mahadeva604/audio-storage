@@ -103,7 +103,7 @@ definitions:
     - password
     - username
     type: object
-host: 10.191.0.210:8000
+host: localhost:8000
 info:
   contact: {}
   description: API Server to share aac files
