@@ -5,11 +5,14 @@ import (
 	"github.com/jmoiron/sqlx"
 	storage "github.com/mahadeva604/audio-storage"
 	"io"
+	"time"
 )
 
 type Authorization interface {
 	CreateUser(user storage.User) (int, error)
 	GetUser(username, password string) (storage.User, error)
+	SetRefreshToken(username int, refreshToken string, refreshTokenTTL time.Duration) error
+	UpdateRefreshToken(oldRefreshToken string, newRefreshToken string, refreshTokenTTL time.Duration) (int, error)
 }
 
 type Audio interface {

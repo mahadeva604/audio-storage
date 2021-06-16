@@ -100,10 +100,11 @@ func TestHandler_sigUp(t *testing.T) {
 }
 
 func TestHandler_sigIn(t *testing.T) {
-	type mockBehavior func(s *mock_service.MockAuthorization, user signInInput)
+	type mockBehavior func(s *mock_service.MockAuthorization, user signInInput, userId int)
 
 	testTable := []struct {
 		name                 string
+		userId               int
 		inputBody            string
 		inputUser            signInInput
 		mockBehavior         mockBehavior
@@ -112,36 +113,53 @@ func TestHandler_sigIn(t *testing.T) {
 	}{
 		{
 			name:      "OK",
+			userId:    1,
 			inputBody: `{"username":"user_1","password":"qwerty_1"}`,
 			inputUser: signInInput{
 				Username: "user_1",
 				Password: "qwerty_1",
 			},
-			mockBehavior: func(s *mock_service.MockAuthorization, user signInInput) {
-				s.EXPECT().GenerateToken(user.Username, user.Password).Return("token_string", nil)
+			mockBehavior: func(s *mock_service.MockAuthorization, user signInInput, userId int) {
+				s.EXPECT().GenerateAccessToken(user.Username, user.Password).Return(userId, "token_string", nil)
+				s.EXPECT().GenerateRefreshToken(userId).Return("refresh_token_string", nil)
 			},
 			expectedStatusCode:   200,
-			expectedResponseBody: `{"token":"token_string"}`,
+			expectedResponseBody: `{"token":"token_string","refresh_token":"refresh_token_string"}`,
 		},
 		{
 			name:                 "Empty field",
 			inputBody:            "",
-			mockBehavior:         func(s *mock_service.MockAuthorization, user signInInput) {},
+			mockBehavior:         func(s *mock_service.MockAuthorization, user signInInput, userId int) {},
 			expectedStatusCode:   400,
 			expectedResponseBody: `{"message":"invalid input body"}`,
 		},
 		{
-			name:      "Servise fail",
+			name:      "Service fail 1",
+			userId:    1,
 			inputBody: `{"username":"user_1","password":"qwerty_1"}`,
 			inputUser: signInInput{
 				Username: "user_1",
 				Password: "qwerty_1",
 			},
-			mockBehavior: func(s *mock_service.MockAuthorization, user signInInput) {
-				s.EXPECT().GenerateToken(user.Username, user.Password).Return("", errors.New("service error"))
+			mockBehavior: func(s *mock_service.MockAuthorization, user signInInput, userId int) {
+				s.EXPECT().GenerateAccessToken(user.Username, user.Password).Return(userId, "token_string", nil)
+				s.EXPECT().GenerateRefreshToken(userId).Return("", errors.New("service error 1"))
 			},
 			expectedStatusCode:   500,
-			expectedResponseBody: `{"message":"service error"}`,
+			expectedResponseBody: `{"message":"service error 1"}`,
+		},
+		{
+			name:      "Service fail 2",
+			inputBody: `{"username":"user_1","password":"qwerty_1"}`,
+			inputUser: signInInput{
+				Username: "user_1",
+				Password: "qwerty_1",
+			},
+			mockBehavior: func(s *mock_service.MockAuthorization, user signInInput, userId int) {
+				s.EXPECT().GenerateAccessToken(user.Username, user.Password).Return(0, "", errors.New("service error 2"))
+			},
+			expectedStatusCode:   500,
+			expectedResponseBody: `{"message":"service error 2"}`,
 		},
 	}
 
@@ -151,7 +169,7 @@ func TestHandler_sigIn(t *testing.T) {
 			defer c.Finish()
 
 			auth := mock_service.NewMockAuthorization(c)
-			testCase.mockBehavior(auth, testCase.inputUser)
+			testCase.mockBehavior(auth, testCase.inputUser, testCase.userId)
 
 			services := &service.Service{Authorization: auth}
 			handler := NewHandler(services)
@@ -161,6 +179,92 @@ func TestHandler_sigIn(t *testing.T) {
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("POST", "/sign-in", bytes.NewBufferString(testCase.inputBody))
+
+			r.ServeHTTP(w, req)
+			assert.Equal(t, testCase.expectedStatusCode, w.Code)
+			assert.Equal(t, testCase.expectedResponseBody, w.Body.String())
+		})
+	}
+}
+
+func TestHandler_refreshTokens(t *testing.T) {
+	type mockBehavior func(s *mock_service.MockAuthorization, refreshToken refreshTokensInput, userId int)
+
+	testTable := []struct {
+		name                 string
+		userId               int
+		inputBody            string
+		refreshToken         refreshTokensInput
+		mockBehavior         mockBehavior
+		expectedStatusCode   int
+		expectedResponseBody string
+	}{
+		{
+			name:      "OK",
+			userId:    1,
+			inputBody: `{"refresh_token":"refresh_token"}`,
+			refreshToken: refreshTokensInput{
+				RefreshTooken: "refresh_token",
+			},
+			mockBehavior: func(s *mock_service.MockAuthorization, refreshToken refreshTokensInput, userId int) {
+				s.EXPECT().UpdateRefreshToken(refreshToken.RefreshTooken).Return(userId, "new_refresh_token_string", nil)
+				s.EXPECT().UpdateAccessToken(userId).Return("new_token_string", nil)
+			},
+			expectedStatusCode:   200,
+			expectedResponseBody: `{"refresh_token":"new_refresh_token_string","token":"new_token_string"}`,
+		},
+		{
+			name: "Error invalid body",
+			mockBehavior: func(s *mock_service.MockAuthorization, refreshToken refreshTokensInput, userId int) {
+			},
+			expectedStatusCode:   400,
+			expectedResponseBody: `{"message":"invalid input body"}`,
+		},
+		{
+			name:      "Error service 1",
+			userId:    1,
+			inputBody: `{"refresh_token":"refresh_token"}`,
+			refreshToken: refreshTokensInput{
+				RefreshTooken: "refresh_token",
+			},
+			mockBehavior: func(s *mock_service.MockAuthorization, refreshToken refreshTokensInput, userId int) {
+				s.EXPECT().UpdateRefreshToken(refreshToken.RefreshTooken).Return(0, "", errors.New("service error 1"))
+			},
+			expectedStatusCode:   500,
+			expectedResponseBody: `{"message":"service error 1"}`,
+		},
+		{
+			name:      "Error service 2",
+			userId:    1,
+			inputBody: `{"refresh_token":"refresh_token"}`,
+			refreshToken: refreshTokensInput{
+				RefreshTooken: "refresh_token",
+			},
+			mockBehavior: func(s *mock_service.MockAuthorization, refreshToken refreshTokensInput, userId int) {
+				s.EXPECT().UpdateRefreshToken(refreshToken.RefreshTooken).Return(userId, "new_refresh_token_string", nil)
+				s.EXPECT().UpdateAccessToken(userId).Return("", errors.New("service error 2"))
+			},
+			expectedStatusCode:   500,
+			expectedResponseBody: `{"message":"service error 2"}`,
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			auth := mock_service.NewMockAuthorization(c)
+			testCase.mockBehavior(auth, testCase.refreshToken, testCase.userId)
+
+			services := &service.Service{Authorization: auth}
+			handler := NewHandler(services)
+
+			r := gin.New()
+			r.POST("/refresh", handler.refreshTokens)
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("POST", "/refresh", bytes.NewBufferString(testCase.inputBody))
 
 			r.ServeHTTP(w, req)
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)

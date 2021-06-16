@@ -21,3 +21,9 @@ CREATE TABLE shares (
                         user_id     INTEGER REFERENCES users(user_id) ON DELETE CASCADE NOT NULL,
                         UNIQUE(audio_id, user_id)
 );
+
+CREATE TABLE refresh_tokens (
+                        user_id     INTEGER REFERENCES users(user_id) ON DELETE CASCADE NOT NULL UNIQUE,
+                        refresh_token uuid NOT NULL,
+                        expires_in  timestamp  with time zone NOT NULL
+);

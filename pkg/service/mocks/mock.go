@@ -51,19 +51,35 @@ func (mr *MockAuthorizationMockRecorder) CreateUser(user interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockAuthorization)(nil).CreateUser), user)
 }
 
-// GenerateToken mocks base method.
-func (m *MockAuthorization) GenerateToken(username, password string) (string, error) {
+// GenerateAccessToken mocks base method.
+func (m *MockAuthorization) GenerateAccessToken(username, password string) (int, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateToken", username, password)
+	ret := m.ctrl.Call(m, "GenerateAccessToken", username, password)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GenerateAccessToken indicates an expected call of GenerateAccessToken.
+func (mr *MockAuthorizationMockRecorder) GenerateAccessToken(username, password interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateAccessToken", reflect.TypeOf((*MockAuthorization)(nil).GenerateAccessToken), username, password)
+}
+
+// GenerateRefreshToken mocks base method.
+func (m *MockAuthorization) GenerateRefreshToken(userId int) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateRefreshToken", userId)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GenerateToken indicates an expected call of GenerateToken.
-func (mr *MockAuthorizationMockRecorder) GenerateToken(username, password interface{}) *gomock.Call {
+// GenerateRefreshToken indicates an expected call of GenerateRefreshToken.
+func (mr *MockAuthorizationMockRecorder) GenerateRefreshToken(userId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateToken", reflect.TypeOf((*MockAuthorization)(nil).GenerateToken), username, password)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateRefreshToken", reflect.TypeOf((*MockAuthorization)(nil).GenerateRefreshToken), userId)
 }
 
 // ParseToken mocks base method.
@@ -79,6 +95,37 @@ func (m *MockAuthorization) ParseToken(token string) (int, error) {
 func (mr *MockAuthorizationMockRecorder) ParseToken(token interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseToken", reflect.TypeOf((*MockAuthorization)(nil).ParseToken), token)
+}
+
+// UpdateAccessToken mocks base method.
+func (m *MockAuthorization) UpdateAccessToken(userId int) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAccessToken", userId)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateAccessToken indicates an expected call of UpdateAccessToken.
+func (mr *MockAuthorizationMockRecorder) UpdateAccessToken(userId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAccessToken", reflect.TypeOf((*MockAuthorization)(nil).UpdateAccessToken), userId)
+}
+
+// UpdateRefreshToken mocks base method.
+func (m *MockAuthorization) UpdateRefreshToken(oldRefreshToken string) (int, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateRefreshToken", oldRefreshToken)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// UpdateRefreshToken indicates an expected call of UpdateRefreshToken.
+func (mr *MockAuthorizationMockRecorder) UpdateRefreshToken(oldRefreshToken interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRefreshToken", reflect.TypeOf((*MockAuthorization)(nil).UpdateRefreshToken), oldRefreshToken)
 }
 
 // MockAudio is a mock of Audio interface.

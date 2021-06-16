@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"os"
+	"time"
 )
 
 // @title AAC Share API
@@ -54,8 +55,18 @@ func main() {
 		log.Fatalf("Can't get secret key: %s", err.Error())
 	}
 
+	accessTokenTTL, err := time.ParseDuration(viper.GetString("auth.accessTokenTTL"))
+	if err != nil {
+		log.Fatalf("Can't parse access token TTL: %s", err.Error())
+	}
+
+	refreshTokenTTL, err := time.ParseDuration(viper.GetString("auth.refreshTokenTTL"))
+	if err != nil {
+		log.Fatalf("Can't parse refresh token TTL: %s", err.Error())
+	}
+
 	repos := repository.NewRepository(db, saveDir)
-	services := service.NewService(repos, secretKey)
+	services := service.NewService(repos, secretKey, accessTokenTTL, refreshTokenTTL)
 	handlers := handler.NewHandler(services)
 
 	srv := new(storage.Server)

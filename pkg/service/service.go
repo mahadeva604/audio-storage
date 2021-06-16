@@ -5,13 +5,17 @@ import (
 	storage "github.com/mahadeva604/audio-storage"
 	"github.com/mahadeva604/audio-storage/pkg/repository"
 	"io"
+	"time"
 )
 
 //go:generate mockgen -source=service.go -destination=mocks/mock.go
 
 type Authorization interface {
 	CreateUser(user storage.User) (int, error)
-	GenerateToken(username, password string) (string, error)
+	GenerateAccessToken(username, password string) (int, string, error)
+	UpdateAccessToken(userId int) (string, error)
+	GenerateRefreshToken(userId int) (string, error)
+	UpdateRefreshToken(oldRefreshToken string) (int, string, error)
 	ParseToken(token string) (int, error)
 }
 
@@ -40,9 +44,9 @@ type Service struct {
 	Storage
 }
 
-func NewService(repos *repository.Repository, secretKey []byte) *Service {
+func NewService(repos *repository.Repository, secretKey []byte, accessTokenTTL, refreshTokenTTL time.Duration) *Service {
 	return &Service{
-		Authorization: NewAuthService(repos, secretKey),
+		Authorization: NewAuthService(repos, secretKey, accessTokenTTL, refreshTokenTTL),
 		Audio:         NewAudioService(repos),
 		Share:         NewShareService(repos),
 		Storage:       NewStorageService(repos),

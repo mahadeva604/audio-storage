@@ -9,6 +9,7 @@ const (
 	usersTable  = "users"
 	audiosTable = "audios"
 	sharesTable = "shares"
+	tokenTable  = "refresh_tokens"
 )
 
 type Config struct {

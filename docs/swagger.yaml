@@ -10,6 +10,13 @@ definitions:
       id:
         type: integer
     type: object
+  handler.refreshTokensInput:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
   handler.signInInput:
     properties:
       password:
@@ -23,6 +30,13 @@ definitions:
   handler.statusResponse:
     properties:
       status:
+        type: string
+    type: object
+  handler.tokensResponse:
+    properties:
+      refresh_token:
+        type: string
+      token:
         type: string
     type: object
   storage.AudioList:
@@ -397,6 +411,45 @@ paths:
       summary: Get share list
       tags:
       - share
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generate new refresh and access tokens
+      operationId: refresh
+      parameters:
+      - description: refresh token
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.refreshTokensInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.tokensResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Refresh tokens
+      tags:
+      - auth
   /auth/sign-in:
     post:
       consumes:
@@ -414,9 +467,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: token
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/handler.tokensResponse'
         "400":
           description: Bad Request
           schema:
